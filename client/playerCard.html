@@ -1,0 +1,10 @@
+<div class="playerCardWrapper" ng-style="{'background-color': '#'+player.color, 'border-color': '#'+player.alterColor, 'color':'#'+player.alterColor }">
+    <div style="display:table-row">
+        <img class="playerPortrait" width="100" height="100" src='{{player.avatar}}' />
+        <div class="playerMiscInfo">
+            <div class="playerName">{{player.name}}</div>
+            <div>Points: <strong>[{{player.points}}]</strong></div>
+            <span style="font-size:large" ng-repeat="l in range(player.life) track by $index">♥</>
+        </div>
+    </div>
+</div>

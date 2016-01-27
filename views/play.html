@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>TANKOK!</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/base.css" type="text/css" />
+    <script>
+        (function(i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r;
+            i[r] = i[r] || function() {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date();
+            a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+            a.async = 1;
+            a.src = g;
+            m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+        ga('create', 'UA-53641010-8', 'auto');
+        ga('send', 'pageview');
+    </script>
+    <style>
+        #game {
+            width: 800px;
+            height: 600px;
+            margin: auto;
+            display: table-cell;
+        }
+        
+        #gameContainer {
+            overflow: hidden;
+        }
+        
+        #wrapper {
+            display: table;
+            margin: auto;
+        }
+        
+        .playerCardHolder {
+            border-radius: 5px;
+            border: 1px solid blueviolet;
+            background-color: #A554E8;
+            width: 250px;
+            display: table-cell;
+            vertical-align: top;
+        }
+        
+        .playerCardWrapper {
+            border: 2px solid;
+            border-radius: 4px;
+            width: 240px;
+            margin: auto;
+            margin-top: 13px;
+            overflow: hidden;
+        }
+        
+        .playerPortrait {
+            width: 100px;
+            height: 100px;
+            display: table-cell;
+        }
+        
+        .playerName {
+            font-weight: bold;
+        }
+        
+        .playerMiscInfo {
+            display: table-cell;
+            vertical-align: top;
+            padding: 4px;
+            text-wrap: nowrap;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+
+<body ng-app="ViewApp" ng-class="connectionStatus">
+    <div id="wrapper" ng-controller="gameController">
+        <div id="leftPlayerChart" class="playerCardHolder">
+            <playercard player="player" ng-repeat="player in gameWorld.playerList" ng-if="$even"></playercard>
+        </div>
+        <div id="gameContainer">
+            <canvas id="game" width="800" height="600"></canvas>
+        </div>
+        <div id="rightPlayerChart" class="playerCardHolder">
+            <playercard player="player" ng-repeat="player in gameWorld.playerList" ng-if="$odd"></playercard>
+        </div>
+    </div>
+    <script type="text/javascript" src="js/Helpers.js"></script>
+    <script type="text/javascript" src="js/Vector.js"></script>
+    <script type="text/javascript" src="js/view/GameWorld.js"></script>
+    <script type="text/javascript" src="js/view/Player.js"></script>
+    <script type="text/javascript" src="js/view/Explosion.js"></script>
+    <script type="text/javascript" src="js/view/Ball.js"></script>
+    <script type="text/javascript" src="js/view/Wall.js"></script>
+    <script type="text/javascript" src="js/view/Pixel.js"></script>
+    <script type="text/javascript" src="js/view/Text.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <!--<script src="/js/angular.min.js"></script>-->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
+    <script type="text/javascript">
+        window.onresize = function() {
+            var gameCanvas = document.querySelector("#game");
+            var documentSize = document.body.getClientRects()[0];
+            if (documentSize.width < documentSize.height) {
+                gameCanvas.style.height = "";
+                gameCanvas.style.width = "100%";
+            }
+            else {
+                gameCanvas.style.width = "";
+                gameCanvas.style.height = "100%";
+            }
+        }
+
+        window.onresize();
+
+        var module = angular.module("ViewApp", []).run(function($rootScope) {
+            var gameCode = window.location.pathname.split("/").pop();
+            $rootScope.socket = io.connect();
+
+            $rootScope.connectionStatus = "working";
+            $rootScope.socket.on("connect", function() {
+                $rootScope.connectionStatus = "online";
+                $rootScope.socket.emit("joinRoom", {
+                    roomId: gameCode,
+                    type: "view"
+                });
+                $rootScope.$apply();
+            });
+
+            $rootScope.socket.on("disconnect", function() {
+                $rootScope.connectionStatus = "offline";
+                $rootScope.$apply();
+            });
+
+            $rootScope.latency = 0;
+            $rootScope.socket.on("ping", function(payload) {
+                payload.receivedAt = Date.now();
+                $rootScope.socket.emit("pong", payload);
+            });
+            $rootScope.socket.on("pong", function(payload) {
+                var receivedAt = Date.now();
+                var latency = receivedAt - payload.sentAt;
+                $rootScope.latency = latency;
+                $rootScope.$apply();
+            });
+            $rootScope.checkLatency = function() {
+                $rootScope.socket.emit("ping", {
+                    sentAt: Date.now()
+                });
+            };
+
+            $rootScope.socket.on("welcome", function(payload) {
+                $rootScope.viewName = payload.name;
+                console.log("We were welcomed as " + $rootScope.viewName + "!")
+                $rootScope.$apply();
+            });
+        });
+
+        module.controller("gameController", function($scope, $rootScope) {
+            $scope.gameWorld = new GameWorld("#game");
+
+            $rootScope.socket.on("directionChange", function(obj) {
+                obj.type = "d";
+                $scope.gameWorld.queue(obj);
+            });
+
+            $rootScope.socket.on("keypress", function(obj) {
+                obj.type = "k";
+                $scope.gameWorld.queue(obj);
+            });
+
+            $rootScope.socket.on("playerJoin", function(obj) {
+                $scope.gameWorld.addPlayer(obj.id, obj.name);
+                $scope.$apply();
+            });
+
+            $rootScope.socket.on("playerLeave", function(obj) {
+                $scope.gameWorld.kickPlayer(obj.id);
+                $scope.$apply();
+            });
+
+            $rootScope.socket.on("welcome", function(payload) {
+                $scope.gameWorld.start();
+                $scope.$apply();
+            });
+
+            $scope.gameWorld.on("point", function() {
+                $scope.$apply();
+            });
+
+            $scope.gameWorld.on("hit", function() {
+                $scope.$apply();
+            });
+        });
+
+        module.directive('playercard', function() {
+            return {
+                restrict: 'E',
+                scope: {
+                    player: "="
+                },
+                templateUrl: '../playerCard.html',
+                link: function(scope, element) {
+                    scope.range = function(n) {
+                        return new Array(n);
+                    };
+                }
+            };
+        });
+    </script>
+</body>
+
+</html>

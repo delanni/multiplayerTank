@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="hu">
+
+<head>
+    <meta charset="utf-8">
+    <meta encoding="utf-8">
+    <title>Fuking tanx</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/base.css" type="text/css" />
+    <link rel="pingback" href="/pingback/index" />
+    <script>
+        (function(i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r;
+            i[r] = i[r] || function() {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date();
+            a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+            a.async = 1;
+            a.src = g;
+            m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+        ga('create', 'UA-53641010-7', 'auto');
+        ga('send', 'pageview');
+    </script>
+    <style>
+        body {
+            padding-top: 60px;
+        }
+    </style>
+</head>
+
+<body ng-app="main">
+    <div class="container panel panel-default">
+        <div class="panel-heading">
+            Create or join a game
+        </div>
+        <div class="panel-body">
+            <div class="input-group">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" ng-click="create()"><icon>play-circle</icon> Create</button>
+                </span>
+                <input type="text" class="form-control" ng-model="gameCode" placeholder="(desired) Game code" />
+                <span class="input-group-btn">
+                    <button class="btn btn-default" ng-click="join()" type="button">Join! <icon>share-alt</icon></button>
+                </span>
+            </div>
+        </div>
+        <div class="activeRooms">
+            <button class="btn room" ng-repeat="room in rooms" ng-click="join(room.id)" ng-style="{'background-color': getColor(room)}">
+                <icon>play-circle</icon> {{room.id}} - [{{room.players.length}}/{{room.capacity}}]
+            </button>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/angular.min.js"></script>
+    <script>
+        var module = angular.module("main", []).run(function($rootScope, $http) {
+            $rootScope.create = function() {
+                window.location.href = "/play/" + ($rootScope.gameCode || "");
+            };
+            $rootScope.join = function(id) {
+                window.location.href = "/control/" + ($rootScope.gameCode || id || "");
+            };
+            $rootScope.getColor = function(room){
+                return room.capacity>room.players.length?'lightgreen':'salmon';
+            };
+
+            $rootScope.rooms = [];
+
+            var refresh = function() {
+                $http({
+                    method: 'GET',
+                    url: '/roomList'
+                }).then(function successCallback(response) {
+                    if (response.data instanceof Array) {
+                        $rootScope.rooms = response.data;
+                    }
+                }, function errorCallback(response) {
+                    console.error(response);
+                });
+            };
+
+            setInterval(refresh, 3000);
+
+            refresh();
+        }).directive("icon", function() {
+            return {
+                restrict: "E",
+                scope: {
+                    cls: '=class',
+                },
+                link: function(scope, element, attr) {
+                    var iconClass = element.text();
+                    var additionalClasses = scope.cls ? " " + scope.cls : "";
+                    element.html('<span class="glyphicon glyphicon-' + iconClass + additionalClasses + '" aria-hidden="true"></span>');
+                }
+            };
+        });
+    </script>
+</body>
+
+</html>

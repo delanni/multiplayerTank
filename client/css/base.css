@@ -1,0 +1,37 @@
+.working {
+    background-color: rgb(255, 228, 178);
+    transition: 1s;
+}
+
+.online {
+    background-color: rgb(181, 255, 181);
+    transition: 1s;
+}
+
+.offline {
+    background-color: rgb(255, 206, 200);
+    transition: 1s;
+}
+
+.container {
+    padding: 6px;
+    display:block;
+    margin:auto;
+    background-color: lightyellow;
+}
+
+.text-working {
+    color: orange;
+    transition: 1s;
+}
+
+.text-good {
+    color: blueviolet;
+    transition: 1s;
+}
+
+.text-bad {
+    color: red;
+    transition: 1s;
+}
+

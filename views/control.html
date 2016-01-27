@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Controller!</title>
+    <meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/base.css" type="text/css" />
+    <script>
+        (function(i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r;
+            i[r] = i[r] || function() {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date();
+            a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+            a.async = 1;
+            a.src = g;
+            m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+        ga('create', 'UA-53641010-9', 'auto');
+        ga('send', 'pageview');
+    </script>
+    <style>
+        body {
+            padding: 8px;
+        }
+        
+        * {
+            -webkit-touch-callout: none;
+            /* prevent callout to copy image, etc when tap to hold */
+            -webkit-text-size-adjust: none;
+            /* prevent webkit from resizing text to fit */
+            /* make transparent link selection, adjust last value opacity 0 to 1.0 */
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+            -webkit-user-select: none;
+            /* prevent copy paste, to allow, change 'none' to 'text' */
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+            user-select: none;
+        }
+        
+        #controllerCanvas {
+            display: block;
+            margin: auto;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body ng-app="ControllerApp" ng-class="connectionStatus">
+    <div class="container panel panel-default">
+        <canvas id="controllerCanvas" width="800" height="450"></canvas>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/angular.min.js"></script>
+    <script type="text/javascript" src="js/Vector.js"></script>
+    <script type="text/javascript" src="js/controller/ControllerCanvas.js"></script>
+    <script>
+        (screen.msLockOrientation && screen.msLockOrientation("landscape-primary")) || (screen.mozLockOrientation && screen.mozLockOrientation("landscape-primary"));
+
+
+        var module = angular.module("ControllerApp", []).run(function($rootScope) {
+            var gameCode = window.location.pathname.split("/").pop();
+            $rootScope.socket = io.connect();
+
+            $rootScope.connectionStatus = "working";
+            $rootScope.socket.on("connect", function() {
+                $rootScope.connectionStatus = "online";
+                $rootScope.socket.emit("joinRoom", {
+                    roomId: gameCode,
+                    type: "controller"
+                });
+                $rootScope.$apply();
+            });
+
+            $rootScope.socket.on("disconnect", function() {
+                $rootScope.connectionStatus = "offline";
+                $rootScope.$apply();
+            });
+
+            $rootScope.latency = 0;
+            $rootScope.socket.on("ping", function(payload) {
+                payload.receivedAt = Date.now();
+                $rootScope.socket.emit("pong", payload);
+            });
+            $rootScope.socket.on("pong", function(payload) {
+                var receivedAt = Date.now();
+                var latency = receivedAt - payload.sentAt;
+                $rootScope.latency = latency;
+                $rootScope.$apply();
+            });
+            $rootScope.checkLatency = function() {
+                $rootScope.socket.emit("ping", {
+                    sentAt: Date.now()
+                });
+            };
+
+            $rootScope.socket.on("welcome", function(payload) {
+                console.log("We were welcomed as " + payload.name + "!");
+                $rootScope.name = payload.name;
+                $rootScope.$apply();
+                $rootScope.startCanvas();
+            });
+
+            $rootScope.granularity = 16;
+            $rootScope.dir = function(x, y) {
+                var granularity = $rootScope.granularity;
+                var angle = +(Math.round(Math.atan2(y, x) * granularity) / granularity).toPrecision(4);
+                if ($rootScope.lastDir && $rootScope.lastDir.toString() == angle) return;
+                $rootScope.lastDir = angle;
+                $rootScope.socket.emit("directionChange", {
+                    angle: angle
+                });
+            };
+
+            $rootScope.action = function(id, value) {
+                $rootScope.socket.emit("keypress", {
+                    key: id,
+                    value: value
+                });
+            };
+
+            $rootScope.startCanvas = function() {
+                window.scrollTo(0, 1);
+                var c = new ControllerCanvas("controllerCanvas");
+                $rootScope.ctrCanvas = c;
+
+                var configJson = window.localStorage["controllerConfig"];
+
+                c.addButton(new Button("thrust", {
+                        position: new Vector(739, 160.5),
+                        symbol: "💨",
+                        color: 0xfacaca,
+                        alterColor: 0x0ba3af
+                    },
+                    function() {
+                        $rootScope.action(0, true);
+                    },
+                    function() {
+                        $rootScope.action(0, false);
+                    }
+                ));
+
+                c.addButton(new Button("fire", {
+                        position: new Vector(673, 255),
+                        symbol: "🔫",
+                        color: 0x87e6a1,
+                        alterColor: 0x29301e
+                    },
+                    function() {
+                        $rootScope.action(1, true);
+                    },
+                    function() {
+                        $rootScope.action(1, false);
+                    }
+                ));
+
+                c.addButton(new Button("shield", {
+                        position: new Vector(643.5, 394),
+                        symbol: "💗",
+                        color: 0xfd42fd,
+                        alterColor: 0x2933ff
+                    },
+                    function() {
+                        $rootScope.action(2, true);
+                    },
+                    function() {
+                        $rootScope.action(2, false);
+                    }
+                ));
+
+                var joystick = new Button("joystick", {
+                        position: new Vector(100, 100),
+                        symbol: "●",
+                        color: 0x7e6d1d,
+                        alterColor: 0x7eeeee,
+                        size: 50,
+                        extendedSize: 120
+                    },
+                    function() {},
+                    function() {
+                        $rootScope.dir();
+                    },
+                    function(touch, ev) {
+                        var v = new Vector(touch.x, touch.y).subtract(joystick.position);
+                        $rootScope.dir(v.x, v.y);
+                    });
+                c.addButton(joystick);
+
+                var lockUnlock = new Button("lock", {
+                        position: new Vector(150, 200),
+                        symbol: "🔓",
+                        color: 0x7e6d1d,
+                        alterColor: 0x7eeeee,
+                        size: 25,
+                        extendedSize: 30
+                    },
+                    function() {
+                        this.isDragged = 0;
+                    },
+                    function() {
+                        if (this.isDragged > 5) return;
+                        if (this.isLocked) {
+                            c.unlockButtons();
+                            this.symbol = "🔒";
+                        }
+                        else {
+                            c.lockButtons();
+                            this.symbol = "🔓";
+                            window.localStorage["controllerConfig"] = c.persistState();
+                        }
+                    },
+                    function(touch, ev) {
+                        this.isDragged++;
+                    });
+                c.addButton(lockUnlock);
+
+                if (configJson) {
+                    c.loadState(configJson);
+                }
+
+                c.start();
+            };
+
+
+        }).directive("icon", function() {
+            return {
+                restrict: "E",
+                link: function(scope, element, attr) {
+                    var iconClass = element.text();
+                    var additionalClasses = attr.class ? " " + attr.class : "";
+                    element.html('<span class="glyphicon glyphicon-' + iconClass + additionalClasses + '" aria-hidden="true"></span>');
+                }
+            };
+        });
+    </script>
+</body>
+
+</html>

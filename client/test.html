@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>TEST</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
+  <link rel="stylesheet" href="/css/base.css" type="text/css" />
+  <style>
+    body {
+      padding-top: 60px;
+    }
+  </style>
+</head>
+
+<body ng-app="ConnectedApp" ng-class="status">
+  <div class="container panel panel-default">
+    <div class="panel-body">
+      <button type="button" class="btn btn-default">
+        <span class="glyphicon icon-signal" aria-hidden="true"></span>
+        <span ng-class="{ 'text-bad': latency>500, 'text-working': latency < 500 && latency > 100, 'text-good': latency<=100 }">{{latency}}ms</span>
+      </button>
+    </div>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/bootstrap.min.js"></script>
+  <script src="/js/angular.min.js"></script>
+  <script>
+    var module = angular.module("ConnectedApp", []).run(function($rootScope) {
+      console.log("Connected app created");
+      $rootScope.socket = io.connect();
+
+      $rootScope.status = "working";
+      $rootScope.socket.on("connect", function() {
+        $rootScope.status = "online";
+        $rootScope.$apply();
+      });
+
+      $rootScope.socket.on("disconnect", function() {
+        $rootScope.status = "offline";
+        $rootScope.$apply();
+      });
+
+      $rootScope.latency = 0;
+      $rootScope.socket.on("ping", function(payload) {
+        payload.receivedAt = Date.now();
+        $rootScope.socket.emit("pong", payload);
+      });
+      $rootScope.socket.on("pong", function(payload) {
+        var receivedAt = Date.now();
+        var latency = receivedAt - payload.sentAt;
+        $rootScope.latency = latency;
+        $rootScope.$apply();
+      });
+      $rootScope.checkLatency = function() {
+        $rootScope.socket.emit("ping", {
+          sentAt: Date.now()
+        });
+      };
+      
+      $rootScope.on("welcome", function(){
+        $rootScope.$apply();
+      });
+
+      setInterval($rootScope.checkLatency, 2000);
+    });
+    
+    module.controller("gameController", function($scope,$rootScope){
+        $scope.gameWorld = new GameWorld();
+      
+        $rootScope.socket.on("directionChange", function(obj) {
+            console.log("directionChange", obj);
+        });
+
+        $rootScope.socket.on("keypress", function(obj) {
+            console.log("keypress", obj);
+        });
+    });
+  </script>
+</body>
+
+</html>
