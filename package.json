@@ -1,7 +1,7 @@
 {
-  "name": "Tanks on canvas",
+  "name": "TanksOnCanvas",
   "version": "0.8.8",
-  "description": "",
+  "description": "A small multi-player tank game.",
   "main": "server.js",
   "repository": "",
   "author": "Alex Szabo <delanni.alex@gmail.com>",
