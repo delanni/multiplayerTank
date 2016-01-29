@@ -15,6 +15,7 @@ var Ball = function(x, y, options) {
     this.life = options.life || Infinity;
     
     this.collisionGroup = options.collisionGroup || "ballplayer,0;wallball,1";
+    this.collisionGroups = [];
 };
 
 Ball.prototype.draw = function(context) {

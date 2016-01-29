@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta encoding="utf-8">
-    <title>Fuking tanx</title>
+    <title>Cute Fckn' tanks!</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <link rel="stylesheet" href="/css/base.css" type="text/css" />
@@ -25,6 +25,7 @@
         ga('create', 'UA-53641010-7', 'auto');
         ga('send', 'pageview');
     </script>
+    <script src="/js/facebookShit.js"></script>
     <style>
         body {
             padding-top: 60px;
@@ -33,25 +34,51 @@
 </head>
 
 <body ng-app="main">
-    <div class="container panel panel-default">
-        <div class="panel-heading">
-            Create or join a game
-        </div>
-        <div class="panel-body">
-            <div class="input-group">
-                <span class="input-group-btn">
-                    <button class="btn btn-default" ng-click="create()"><icon>play-circle</icon> Create</button>
-                </span>
-                <input type="text" class="form-control" ng-model="gameCode" placeholder="(desired) Game code" />
-                <span class="input-group-btn">
-                    <button class="btn btn-default" ng-click="join()" type="button">Join! <icon>share-alt</icon></button>
-                </span>
+    <div class="panel panel-default">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Create a game
+            </div>
+            <div class="panel-body">
+                <div class="input-group">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" ng-click="create()"><icon>play-circle</icon> Create</button>
+                    </span>
+                    <input type="text" class="form-control" ng-model="gameCode" placeholder="(desired) Game code" />
+                </div>
             </div>
         </div>
-        <div class="activeRooms">
-            <button class="btn room" ng-repeat="room in rooms" ng-click="join(room.id)" ng-style="{'background-color': getColor(room)}">
-                <icon>play-circle</icon> {{room.id}} - [{{room.players.length}}/{{room.capacity}}]
-            </button>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Join a game
+            </div>
+            <div class="panel-body">
+                <h4>Join by room code</h4>
+                <div class="input-group">
+                    <input type="text" class="form-control" ng-model="gameCode" placeholder="(desired) Game code" />
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" ng-click="join()" type="button">Join! <icon>share-alt</icon></button>
+                    </span>
+                </div>
+                <h4>Games online ({{rooms.length}})</h4>
+                <div class="activeRooms">
+                    <button class="btn room" ng-repeat="room in rooms | orderBy: '-players.length'" ng-click="join(room.id)" ng-style="{'background-color': getColor(room)}">
+                        <icon>play-circle</icon> {{room.id}} - [{{room.players.length}}/{{room.capacity}}]
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="panel-footer">
+            <div id="others" class="container-fluid">
+                <div class="row">
+                    <div class="col-md-6">
+
+                    </div>
+                    <div class="col-md-6">
+                        <div class="fb-like" data-share="true" data-width="100%" data-show-faces="true"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
@@ -66,8 +93,8 @@
             $rootScope.join = function(id) {
                 window.location.href = "/control/" + ($rootScope.gameCode || id || "");
             };
-            $rootScope.getColor = function(room){
-                return room.capacity>room.players.length?'lightgreen':'salmon';
+            $rootScope.getColor = function(room) {
+                return room.capacity > room.players.length ? 'lightgreen' : 'salmon';
             };
 
             $rootScope.rooms = [];

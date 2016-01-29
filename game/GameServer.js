@@ -18,7 +18,14 @@ GameServer.prototype.createRoom = function(id){
     this.rooms[id] = room;
     this.roomList.push(room);
     
+    room.server = this;
     return room;
+};
+
+GameServer.prototype.deleteRoom = function(room){
+    var id = room.id;
+    this.roomList.remove(room);
+    this.rooms[id] = null;
 };
 
 GameServer.prototype.addConnection = function(connection) {
@@ -60,6 +67,7 @@ GameServer.prototype.handlers = {
             connection.emit("error",{
                 message: "The requested room does not exist"
             });
+            connection.emit("roomClosed");
         }
     }
 };

@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>TANKOK!</title>
+    <title>Cute Fckn' tanks!</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
@@ -177,7 +177,7 @@
             });
 
             $rootScope.socket.on("playerJoin", function(obj) {
-                $scope.gameWorld.addPlayer(obj.id, obj.name);
+                $scope.gameWorld.addPlayer(obj.id, obj);
                 $scope.$apply();
             });
 
@@ -185,9 +185,18 @@
                 $scope.gameWorld.kickPlayer(obj.id);
                 $scope.$apply();
             });
+            
+            $rootScope.socket.on("updateInfo", function(info){
+                var player = $scope.gameWorld.players[info.origin];
+                if (player) {
+                    player.updateInfo(info);
+                }
+                $scope.$apply();
+                $rootScope.$apply();
+            });
 
             $rootScope.socket.on("welcome", function(payload) {
-                $scope.gameWorld.start();
+                $scope.gameWorld.start(payload);
                 $scope.$apply();
             });
 

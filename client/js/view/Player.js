@@ -1,10 +1,10 @@
-var Player = function(id, name, color, pos, world) {
+var Player = function(id, info, pos, world) {
     this.playerId = id;
 
-    this.name = name;
-    this.avatar = 'http://thecatapi.com/api/images/get?size=small&player=' +id;
-    this.color = color;
-    this.alterColor = color.toString().split("").map(function(e) {
+    this.name = info.name;
+    this.avatar = info.avatar;
+    this.color = info.color;
+    this.alterColor = this.color.toString().split("").map(function(e) {
         return Math.round(parseInt(e, 16) / 2).toString(16);
     }).join("");
 
@@ -29,10 +29,20 @@ var Player = function(id, name, color, pos, world) {
     this.life = 5;
 
     this.collisionGroup = "ballplayer,1;wallplayer,1";
+    this.collisionGroups = [];
     this.events = {};
 };
 
 __mixin(Player.prototype, EventEmitter.prototype);
+
+Player.prototype.updateInfo = function(info){
+    this.name = info.name || this.name;
+    this.avatar = info.avatar || this.avatar;
+    this.color = info.color || this.color;
+    this.alterColor = this.color.toString().split("").map(function(e) {
+        return Math.round(parseInt(e, 16) / 2).toString(16);
+    }).join("");
+};
 
 Player.prototype.reborn = function(position) {
     this.life = 5;

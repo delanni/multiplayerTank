@@ -16,7 +16,15 @@ Controller.prototype.handlers = {
     },
     keypress: function(connection, payload){
         this.room.messageToViews("keypress", connection.id, payload);
+    },
+    updateInfo: function(connection, payload){
+        this.room.messageToViews("updateInfo", connection.id, payload);
     }
+};
+
+// Message received, pipe it down to the client
+Controller.prototype.emit = function(messageType, payload){
+    this.connection.emit(messageType, payload);
 };
 
 Controller.prototype._attachHandlers = function(connection){

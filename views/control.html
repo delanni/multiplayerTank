@@ -2,10 +2,22 @@
 <html lang="en">
 
 <head>
-    <title>Controller!</title>
+    <title>Cute Fckn' tanks!</title>
+    
     <meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1.0, maximum-scale=1.0" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.0-rc.2/angular.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.0-rc.2/angular-touch.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.0/css/bootstrap-toggle.min.css" rel="stylesheet">
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.0/js/bootstrap-toggle.min.js"></script>
+    <link rel="stylesheet" href="/css/bootstrap-social.css" />
     <link rel="stylesheet" href="/css/base.css" type="text/css" />
     <script>
         (function(i, s, o, g, r, a, m) {
@@ -23,9 +35,11 @@
         ga('create', 'UA-53641010-9', 'auto');
         ga('send', 'pageview');
     </script>
+    <script src="/js/facebookShit.js"></script>
     <style>
         body {
-            padding: 8px;
+            padding: 0;
+            margin: 0;
         }
         
         * {
@@ -39,6 +53,9 @@
             /* prevent copy paste, to allow, change 'none' to 'text' */
             -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
             user-select: none;
+            
+            touch-action: manipulation;
+            -ms-touch-action: manipulation;
         }
         
         #controllerCanvas {
@@ -46,25 +63,128 @@
             margin: auto;
             width: 100%;
         }
+        
+        #controlsHost {
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #237F44;
+        }
+        
+        #messagePanel {
+            width: 200px;
+            height: 40px;
+            box-shadow: 0px 0px 5px 3px lightyellow;
+        }
+        
+        #joystick {
+            width: 90px;
+            height: 90px;
+            margin: -45px;
+            border-radius: 45px !important;
+            font-size: x-large;
+        }
+        
+        #thrust {}
+        
+        .touchElement.pressButton {
+            width: 50px;
+            height: 50px;
+            margin: -25px;
+            border-radius: 15px;
+            font-size: x-large;
+        }
+        
+        .touchElement {
+            border-radius: 3px;
+            padding: 4px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+        }
+        
+        .touchable {
+            box-shadow: 0px 0px 3px 3px lightgreen;
+            transition: 0.1s;
+            border-radius: 1px;
+        }
+        
+        .touched {
+            box-shadow: 0px 0px 5px 10px lightgreen;
+            transition: 0.1s;
+            border-radius: 1px;
+        }
+        
+        .unlocked {
+            /*transition: 0.6s !important;*/
+            box-shadow: 0px 0px 5px 10px blueviolet !important;
+            position: absolute !important;
+            top: 50%;
+            left: 50%;
+        }
+        
+        .active {
+            background-color: lightpurple;
+        }
     </style>
 </head>
 
 <body ng-app="ControllerApp" ng-class="connectionStatus">
-    <div class="container panel panel-default">
-        <canvas id="controllerCanvas" width="800" height="450"></canvas>
+
+    <div id="controlsHost">
+
     </div>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/jquery.min.js"></script>
-    <script src="/js/bootstrap.min.js"></script>
-    <script src="/js/angular.min.js"></script>
+
+    <!-- Modal -->
+    <div class="modal fade" id="optionsModal" tabindex="-1" role="dialog" aria-labelledby="options" style="overflow:scroll">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="myModalLabel">Options</h4>
+                </div>
+                <div class="modal-body">
+
+                    <a class="btn btn-social-icon btn-facebook" href="#" ng-click="facebookInfo()" />
+                        <span class="fa fa-facebook"></span>
+                    </a>
+                    <div class="form-group">
+                        <label for="nameInput">Name</label>
+                        <input type="text" class="form-control" id="nameInput" placeholder="Donkey teeth" ng-model="controller.name" />
+                    </div>
+                    <div class="form-group">
+                        <label for="nameInput">Avatar</label>
+                        <input type="text" class="form-control" id="avatarInput" placeholder="avatar" ng-model="controller.avatar" />
+                        <img class="playerPortrait" width="100" height="100" ng-src='{{controller.avatar}}' />
+                    </div>
+                    <div class="form-group">
+                        <label for="colorInput">Color</label>
+                        <div class="input-group">
+                            <input type="color" ng-model="controller.color" id="colorInput" class="form-control input-group-" />
+                            <span class="input-group-btn">
+                                <button ng-click="randomColor()" class="btn btn-default" ng-style="{'background-color': controller.color }"> Random <icon>random</icon></button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="reorderButtonsBtn">Reorganize layout</label>
+                        <div class="input-group">
+                            <button class="btn btn-default" ng-click="reorganizeButtons()"> Reorganize </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btn-block" ng-click="persistState()">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script type="text/javascript" src="js/Vector.js"></script>
-    <script type="text/javascript" src="js/controller/ControllerCanvas.js"></script>
+    <script type="text/javascript" src="js/controller/ControllerModel.js"></script>
     <script>
-        (screen.msLockOrientation && screen.msLockOrientation("landscape-primary")) || (screen.mozLockOrientation && screen.mozLockOrientation("landscape-primary"));
-
-
-        var module = angular.module("ControllerApp", []).run(function($rootScope) {
+        var module = angular.module("ControllerApp", ['ngTouch']).run(function($rootScope) {
             var gameCode = window.location.pathname.split("/").pop();
+
             $rootScope.socket = io.connect();
 
             $rootScope.connectionStatus = "working";
@@ -87,12 +207,14 @@
                 payload.receivedAt = Date.now();
                 $rootScope.socket.emit("pong", payload);
             });
+
             $rootScope.socket.on("pong", function(payload) {
                 var receivedAt = Date.now();
                 var latency = receivedAt - payload.sentAt;
                 $rootScope.latency = latency;
                 $rootScope.$apply();
             });
+
             $rootScope.checkLatency = function() {
                 $rootScope.socket.emit("ping", {
                     sentAt: Date.now()
@@ -101,131 +223,49 @@
 
             $rootScope.socket.on("welcome", function(payload) {
                 console.log("We were welcomed as " + payload.name + "!");
-                $rootScope.name = payload.name;
+                window.scrollTo(0, 1);
+
+                var controller = new ControllerModel("controlsHost", $rootScope.socket, payload);
+                $rootScope.controller = controller;
+                $rootScope.controller.updateInfo();
                 $rootScope.$apply();
-                $rootScope.startCanvas();
             });
 
-            $rootScope.granularity = 16;
-            $rootScope.dir = function(x, y) {
-                var granularity = $rootScope.granularity;
-                var angle = +(Math.round(Math.atan2(y, x) * granularity) / granularity).toPrecision(4);
-                if ($rootScope.lastDir && $rootScope.lastDir.toString() == angle) return;
-                $rootScope.lastDir = angle;
-                $rootScope.socket.emit("directionChange", {
-                    angle: angle
+            $rootScope.persistState = function() {
+                document.title = "persistState";
+                var cfg = $rootScope.controller.getConfig();
+                $rootScope.controller.updateInfo();
+                $rootScope.controller.saveConfig();
+                $("#optionsModal").modal("hide");
+            };
+
+            $rootScope.reorganizeButtons = function() {
+                $rootScope.allowReorder = false;
+                $("#optionsModal").modal("hide");
+                $rootScope.controller.startReorganizeScript();
+            };
+
+            $rootScope.randomColor = function() {
+                $rootScope.controller.color = "#" + (Math.floor(Math.random() * 0x999999) + 0xf666666).toString(16).substr(1);
+            };
+
+            $rootScope.facebookInfo = function() {
+                var namePromise = facebook.getName().then(function(n) {
+                    $rootScope.controller.name = n;
+                });
+                var avatarPromise = facebook.getPictureUrl().then(function(n) {
+                    $rootScope.controller.avatar = n;
+                });
+                Promise.all([namePromise, avatarPromise]).then(function() {
+                    $rootScope.persistState();
+                    $rootScope.$apply();
                 });
             };
 
-            $rootScope.action = function(id, value) {
-                $rootScope.socket.emit("keypress", {
-                    key: id,
-                    value: value
-                });
-            };
-
-            $rootScope.startCanvas = function() {
-                window.scrollTo(0, 1);
-                var c = new ControllerCanvas("controllerCanvas");
-                $rootScope.ctrCanvas = c;
-
-                var configJson = window.localStorage["controllerConfig"];
-
-                c.addButton(new Button("thrust", {
-                        position: new Vector(739, 160.5),
-                        symbol: "💨",
-                        color: 0xfacaca,
-                        alterColor: 0x0ba3af
-                    },
-                    function() {
-                        $rootScope.action(0, true);
-                    },
-                    function() {
-                        $rootScope.action(0, false);
-                    }
-                ));
-
-                c.addButton(new Button("fire", {
-                        position: new Vector(673, 255),
-                        symbol: "🔫",
-                        color: 0x87e6a1,
-                        alterColor: 0x29301e
-                    },
-                    function() {
-                        $rootScope.action(1, true);
-                    },
-                    function() {
-                        $rootScope.action(1, false);
-                    }
-                ));
-
-                c.addButton(new Button("shield", {
-                        position: new Vector(643.5, 394),
-                        symbol: "💗",
-                        color: 0xfd42fd,
-                        alterColor: 0x2933ff
-                    },
-                    function() {
-                        $rootScope.action(2, true);
-                    },
-                    function() {
-                        $rootScope.action(2, false);
-                    }
-                ));
-
-                var joystick = new Button("joystick", {
-                        position: new Vector(100, 100),
-                        symbol: "●",
-                        color: 0x7e6d1d,
-                        alterColor: 0x7eeeee,
-                        size: 50,
-                        extendedSize: 120
-                    },
-                    function() {},
-                    function() {
-                        $rootScope.dir();
-                    },
-                    function(touch, ev) {
-                        var v = new Vector(touch.x, touch.y).subtract(joystick.position);
-                        $rootScope.dir(v.x, v.y);
-                    });
-                c.addButton(joystick);
-
-                var lockUnlock = new Button("lock", {
-                        position: new Vector(150, 200),
-                        symbol: "🔓",
-                        color: 0x7e6d1d,
-                        alterColor: 0x7eeeee,
-                        size: 25,
-                        extendedSize: 30
-                    },
-                    function() {
-                        this.isDragged = 0;
-                    },
-                    function() {
-                        if (this.isDragged > 5) return;
-                        if (this.isLocked) {
-                            c.unlockButtons();
-                            this.symbol = "🔒";
-                        }
-                        else {
-                            c.lockButtons();
-                            this.symbol = "🔓";
-                            window.localStorage["controllerConfig"] = c.persistState();
-                        }
-                    },
-                    function(touch, ev) {
-                        this.isDragged++;
-                    });
-                c.addButton(lockUnlock);
-
-                if (configJson) {
-                    c.loadState(configJson);
-                }
-
-                c.start();
-            };
-
+            $rootScope.socket.on("roomClosed", function() {
+                alert("Room closed. Please enter another one.");
+                window.location.assign("../..");
+            });
 
         }).directive("icon", function() {
             return {
@@ -237,6 +277,10 @@
                 }
             };
         });
+
+        window.onerror = function(e) {
+            alert(e.message);
+        };
     </script>
 </body>
 

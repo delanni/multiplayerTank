@@ -10,7 +10,7 @@ var Viewer = function(connection, options){
 
 // Message received, pipe it down to the client
 // TODO: probably shouldn't assume its only a ctr -> view message
-Viewer.prototype.onMessage = function(messageType, controllerId, payload){
+Viewer.prototype.message = function(messageType, controllerId, payload){
     this.connection.emit(messageType, payload);
 };
 

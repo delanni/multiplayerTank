@@ -10,6 +10,7 @@ var Wall = function(x, y, options) {
 
     this.life = options.life || Infinity;
     this.collisionGroup = options.collisionGroup || "wallplayer,0;wallball,0";
+    this.collisionGroups = [];
 };
 
 Wall.prototype.draw = function(context) {

@@ -10,20 +10,20 @@ var GameWorld = function(canvasId) {
     this.entityList = [];
     this.players = {};
     this.playerList = [];
-    this.potato=[1,2,3];
 
     this.collisionGroups = {
         keys: []
     };
-
-    this.populate();
     
     this.events = {};
+    
+    this.populated = false;
 };
 
 __mixin(GameWorld.prototype, EventEmitter.prototype);
 
-GameWorld.prototype.populate = function() {
+GameWorld.prototype.populate = function(payload) {
+    
     this.walls = [
         new Wall(400, 10, {
             size: new Vector(400, 10)
@@ -47,10 +47,15 @@ GameWorld.prototype.populate = function() {
     var g = this;
     this.walls.forEach(function(e) {
         g.insert(e);
-    })
+    });
+    
+    this.populated = true;
 };
 
 GameWorld.prototype.start = function() {
+    
+    if (!this.populated) this.populate();
+    
     this.isRunning = true;
     var _this = this;
 
@@ -127,10 +132,9 @@ GameWorld.prototype.queue = function(order) {
     this.orderQueue.push(order);
 };
 
-GameWorld.prototype.addPlayer = function(id, name) {
+GameWorld.prototype.addPlayer = function(id, info) {
     var pos = new Vector(Math.random() * this.width, Math.random() * this.height);
-    var color = (Math.floor(Math.random() * 0xffffff) + 0xf000000).toString(16).substr(1);
-    var player = new Player(id, name, color, pos, this);
+    var player = new Player(id, info, pos, this);
     this.players[id] = player;
     this.playerList.push(player);
     if (player.collisionGroup) {
@@ -171,7 +175,7 @@ GameWorld.prototype.kickPlayer = function(id) {
         this.playerList = this.playerList.filter(function(e) {
             return e != p;
         });
-        p._collisionGroup.remove(p);
+        this.bufferedRemove(p);
     }
 };
 
@@ -194,7 +198,7 @@ GameWorld.prototype.addToCollisionGroup = function(entity, group) {
         }
         var actualCollisionGroup = this.collisionGroups[cgKey][cgIndex];
         actualCollisionGroup.push(entity);
-        entity._collisionGroup = actualCollisionGroup;
+        entity.collisionGroups.push(actualCollisionGroup);
     }
 };
 
@@ -217,8 +221,10 @@ GameWorld.prototype.bufferedRemove = function(entity) {
                 return true;
             }
             else {
-                if (e._collisionGroup) {
-                    e._collisionGroup.remove(e);
+                if (e.collisionGroups) {
+                    e.collisionGroups.forEach(function(cGroup){
+                        cGroup.remove(e);
+                    });
                 }
                 return false;
             }
