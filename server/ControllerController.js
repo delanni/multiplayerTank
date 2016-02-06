@@ -3,7 +3,7 @@ var express = require("express");
 var controllerController = express();
 
 controllerController.get("/", function(req, res, next) {
-    req.redirect("../");
+    res.redirect("../");
 });
 
 controllerController.get("/:id", function(req, res, next) {

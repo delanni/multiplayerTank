@@ -73,6 +73,7 @@ Player.prototype.handleKeystateChange = function(keyChange) {
 };
 
 Player.prototype.animate = function(delta) {
+    var factor = delta * 60/1000;
     if (this.keyState[0]) {
         this.rotation.normalize();
         var direction = this.aimDirection.subtract(this.rotation);
@@ -87,7 +88,7 @@ Player.prototype.animate = function(delta) {
 
     this._positions.push(this.position.clone());
     if (this._positions.length > 10) this._positions.shift();
-    this.position.addInPlace(this.speed);
+    this.position.addInPlace(this.speed.scale(factor));
     if (this.keyState[1]) {
         this.charge = Math.min(this.charge + 1, 99);
     }
