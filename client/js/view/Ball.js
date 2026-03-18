@@ -1,4 +1,10 @@
-var Ball = function(x, y, options) {
+import { Vector } from '../Vector';
+import { Pixel } from './Pixel';
+import { Explosion } from './Explosion';
+import { Player } from './Player';
+import { Wall } from './Wall';
+
+export function Ball(x, y, options) {
     options = options || {};
 
     this.position = new Vector(x, y);
@@ -13,10 +19,10 @@ var Ball = function(x, y, options) {
 
     this.speedFactor = 5;
     this.life = options.life || Infinity;
-    
+
     this.collisionGroup = options.collisionGroup || "ballplayer,0;wallball,1";
     this.collisionGroups = [];
-};
+}
 
 Ball.prototype.draw = function(context) {
     context.fillStyle = "#" + this.color;
@@ -24,7 +30,7 @@ Ball.prototype.draw = function(context) {
     context.arc(this.position.x, this.position.y, this.size / 2, 0, 2 * Math.PI);
     context.fill();
     this.world.insert(new Pixel(this.position.x, this.position.y, {
-        life: this.charge*100+Math.random()*10+50,
+        life: this.charge * 100 + Math.random() * 10 + 50,
         size: 1,
         color: this.color,
         speed: Vector.random().scale(0.1)
@@ -71,29 +77,30 @@ Ball.prototype.collideTo = function(other) {
         var x12Diff = x1.subtract(x2);
         var x21Diff = x2.subtract(x1);
 
-        var v1New = v1.subtract(x12Diff.scale(2 * m2 / (m1 + m2) * v1.subtract(v2).scalar(x12Diff) / Math.pow(x12Diff.length(), 2)));
-        var v2New = v2.subtract(x21Diff.scale(2 * m1 / (m1 + m2) * v2.subtract(v1).scalar(x21Diff) / Math.pow(x21Diff.length(), 2)));
+        var v1New = v1.subtract(x12Diff.scale(2 * m2 / (m1 + m2) * v1.subtract(v2).dot(x12Diff) / Math.pow(x12Diff.length(), 2)));
+        var v2New = v2.subtract(x21Diff.scale(2 * m1 / (m1 + m2) * v2.subtract(v1).dot(x21Diff) / Math.pow(x21Diff.length(), 2)));
 
         this.speed = v1New;
         other.speed = v2New;
     }
     else if (other instanceof Player) {
-        if (other.keyState[2] && other.aimDirection.scale(other.getBoundingRadius()).dot(this.position.subtract(other.position).normalize()) > 0.65){
+        if (other.keyState[2] && other.aimDirection.scale(other.getBoundingRadius()).dot(this.position.subtract(other.position).normalize()) > 0.65) {
             var normal = this.position.subtract(other.position).normalize();
             var incoming = this.speed.clone();
-            var outgoing = incoming.subtract(normal.scale(2*incoming.dot(normal)));
+            var outgoing = incoming.subtract(normal.scale(2 * incoming.dot(normal)));
             var outSpeed = this.speed.length();
             this.speed = outgoing.scaleInPlace(outSpeed);
             this.owner = other;
-        } else {
+        }
+        else {
             this.life = 0;
-            this.explode(this.position.subtract(other.position).normalize(),other);
+            this.explode(this.position.subtract(other.position).normalize(), other);
         }
     }
 };
 
 Ball.prototype.collideBy = function(other) {
-    if (other instanceof Wall){
+    if (other instanceof Wall) {
         this.explode(this.speed.scale(-1).normalize(), other);
         this.life = 0;
     }

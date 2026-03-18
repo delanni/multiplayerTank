@@ -1,4 +1,9 @@
-var GameWorld = function(canvasId) {
+import { Vector } from '../Vector';
+import { EventEmitter, __mixin } from '../Helpers';
+import { Wall } from './Wall';
+import { Player } from './Player';
+
+export function GameWorld(canvasId) {
     this.canvas = document.querySelector(canvasId);
     this.width = this.canvas.width;
     this.height = this.canvas.height;
@@ -14,48 +19,34 @@ var GameWorld = function(canvasId) {
     this.collisionGroups = {
         keys: []
     };
-    
+
     this.events = {};
-    
+
     this.populated = false;
-};
+}
 
 __mixin(GameWorld.prototype, EventEmitter.prototype);
 
-GameWorld.prototype.populate = function(payload) {
-    
+GameWorld.prototype.populate = function() {
     this.walls = [
-        new Wall(400, 10, {
-            size: new Vector(400, 10)
-        }),
-        new Wall(10, 300, {
-            size: new Vector(10, 300)
-        }),
-        new Wall(790, 300, {
-            size: new Vector(10, 300)
-        }),
-        new Wall(400, 590, {
-            size: new Vector(400, 10)
-        }),
-        new Wall(400, 300, {
-            size: new Vector(200, 10)
-        }),
-        new Wall(400, 300, {
-            size: new Vector(10, 150)
-        })
+        new Wall(400, 10, { size: new Vector(400, 10) }),
+        new Wall(10, 300, { size: new Vector(10, 300) }),
+        new Wall(790, 300, { size: new Vector(10, 300) }),
+        new Wall(400, 590, { size: new Vector(400, 10) }),
+        new Wall(400, 300, { size: new Vector(200, 10) }),
+        new Wall(400, 300, { size: new Vector(10, 150) })
     ];
     var g = this;
     this.walls.forEach(function(e) {
         g.insert(e);
     });
-    
+
     this.populated = true;
 };
 
 GameWorld.prototype.start = function() {
-    
     if (!this.populated) this.populate();
-    
+
     this.isRunning = true;
     var _this = this;
 
@@ -148,10 +139,10 @@ GameWorld.prototype.addPlayer = function(id, info) {
 GameWorld.prototype._addPlayerHandlers = function(player) {
     var world = this;
     player.on("died", function(killer) {
-        if (player !== killer){
+        if (player !== killer) {
             killer.addPoints();
         }
-        
+
         player.cooldown = 3;
         var intervalId = setInterval(function() {
             if (player.cooldown) {
@@ -163,7 +154,7 @@ GameWorld.prototype._addPlayerHandlers = function(player) {
                 player.reborn(pos);
             }
         }, 1000);
-        
+
         world.emit("point");
     });
 };
@@ -182,18 +173,16 @@ GameWorld.prototype.kickPlayer = function(id) {
 GameWorld.prototype.addToCollisionGroup = function(entity, group) {
     if (!group && entity.collisionGroup) {
         var cgroups = entity.collisionGroup.split(";");
-        cgroups.forEach(function(group){
+        cgroups.forEach(function(group) {
             this.addToCollisionGroup(entity, group);
-        },this);
-    } else {
+        }, this);
+    }
+    else {
         var cg = group.split(",");
         var cgKey = cg[0];
         var cgIndex = parseInt(cg[1].trim(), 10);
         if (!this.collisionGroups[cgKey]) {
-            this.collisionGroups[cgKey] = [
-                [],
-                []
-            ];
+            this.collisionGroups[cgKey] = [[], []];
             this.collisionGroups.keys.push(cgKey);
         }
         var actualCollisionGroup = this.collisionGroups[cgKey][cgIndex];
@@ -210,7 +199,7 @@ GameWorld.prototype.insert = function(entity) {
     }
 };
 
-GameWorld.prototype.bufferedRemove = function(entity) {
+GameWorld.prototype.bufferedRemove = function() {
     if (this.intervalId) {
         window.clearInterval(this.intervalId);
     }
@@ -222,7 +211,7 @@ GameWorld.prototype.bufferedRemove = function(entity) {
             }
             else {
                 if (e.collisionGroups) {
-                    e.collisionGroups.forEach(function(cGroup){
+                    e.collisionGroups.forEach(function(cGroup) {
                         cGroup.remove(e);
                     });
                 }

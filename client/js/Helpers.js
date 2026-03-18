@@ -15,9 +15,9 @@ Array.prototype.remove = function(item) {
     return i;
 };
 
-var EventEmitter = function() {
+export function EventEmitter() {
     this.events = {};
-};
+}
 
 EventEmitter.prototype.on = function(eventName, callback) {
     var handlerList = this.events[eventName];
@@ -34,7 +34,6 @@ EventEmitter.prototype.off = function(eventName, callback) {
     else {
         var index = handlerList.indexOf(callback);
         if (index >= 0) handlerList.splice(handlerList.indexOf(callback), 1);
-
     }
 };
 
@@ -47,22 +46,21 @@ EventEmitter.prototype.emit = function(eventName, payload) {
     }
 };
 
-
-var __mixin = function(target, source, override){
+export function __mixin(target, source, override) {
     var keys = Object.keys(source);
-    keys.forEach(function(k){
-        if (source.hasOwnProperty(k)){
-            if (override || !target.hasOwnProperty(k)){
+    keys.forEach(function(k) {
+        if (source.hasOwnProperty(k)) {
+            if (override || !target.hasOwnProperty(k)) {
                 target[k] = source[k];
             }
         }
     });
     return target;
-};
+}
 
-var __extends = function(derived, base){
+export function __extends(derived, base) {
     for (var prop in base) if (base.hasOwnProperty(prop)) derived[prop] = base[prop];
     __mixin(derived.prototype, base.prototype);
     derived.super = base;
     return derived;
-};
+}

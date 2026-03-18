@@ -1,4 +1,6 @@
-var Explosion = function(options) {
+import { Vector } from '../Vector';
+
+export function Explosion(options) {
     options = options || {};
 
     this.world = options.world;
@@ -18,8 +20,7 @@ var Explosion = function(options) {
 
     this.strengthMin = options.strengthMin || 0;
     this.strengthMax = options.strengthMax || 1;
-};
-
+}
 
 Explosion.prototype.fire = function(explosionOrigin) {
     var origin = explosionOrigin || this.origin;
@@ -29,7 +30,7 @@ Explosion.prototype.fire = function(explosionOrigin) {
             p.speed = Explosion._conal2(this.coneWidth, this.coneOffset);
             p.speed.scaleInPlace(Explosion._randbetween(this.strengthMin, this.strengthMax));
         }
-        if (origin){
+        if (origin) {
             p.position.x = origin.x;
             p.position.y = origin.y;
         }

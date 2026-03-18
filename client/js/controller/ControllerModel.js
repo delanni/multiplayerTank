@@ -1,5 +1,6 @@
-var ControllerModel = function(containerId, socket, options) {
+/* global $ */
 
+export function ControllerModel(containerId, socket, options) {
     this.container = document.getElementById(containerId);
     this.socket = socket;
 
@@ -12,14 +13,12 @@ var ControllerModel = function(containerId, socket, options) {
 
     this.loadConfig();
 
-    var pleaseDontHanlde = function(ev) {
+    var pleaseDontHandle = function(ev) {
         ev.preventDefault();
         return true;
     };
-    /*    document.addEventListener("touchstart", pleaseDontHanlde);
-        document.addEventListener("touchend", pleaseDontHanlde); */
-    document.addEventListener("touchmove", pleaseDontHanlde);
-};
+    document.addEventListener("touchmove", pleaseDontHandle);
+}
 
 ControllerModel.prototype = {
     loadConfig: function() {
@@ -67,15 +66,14 @@ ControllerModel.prototype = {
         var items = {};
         var _this = this;
 
-        // JOYSTICK
         var joystickButton = new Button("joystick", container, {
                 position: [-30, 10],
                 classes: ["touchable", "touchElement"],
                 color: "salmon",
-                symbol: "☸"
+                symbol: "\u2638"
             },
-            function(ev) {},
-            function(ev) {
+            function() {},
+            function() {
                 _this.direction();
             },
             function(ev) {
@@ -88,61 +86,58 @@ ControllerModel.prototype = {
         );
         items["joystick"] = joystickButton;
 
-        // THRUST BUTTON
         var thrustButton = new Button("thrust", container, {
                 classes: ["pressButton", "touchable", "touchElement"],
                 position: [35, 10],
                 color: "salmon",
-                symbol: "🚀"
+                symbol: "\uD83D\uDE80"
             },
-            function(ev) {
+            function() {
                 _this.action(0, true);
             },
-            function(ev) {
+            function() {
                 _this.action(0, false);
             },
-            function(ev) {});
+            function() {});
         items["thrust"] = thrustButton;
 
-        // SHIELD BUTTON
         var shieldButton = new Button("shield", container, {
                 classes: ["pressButton", "touchable", "touchElement"],
                 position: [35, 30],
                 color: "salmon",
-                symbol: "⛱ "
+                symbol: "\u26F1 "
             },
-            function(ev) {
+            function() {
                 _this.action(2, true);
             },
-            function(ev) {
+            function() {
                 _this.action(2, false);
             },
-            function(ev) {});
+            function() {});
         items["shield"] = shieldButton;
 
-        // SHOOT BUTTON
         var shootButton = new Button("shoot", container, {
                 classes: ["pressButton", "touchable", "touchElement"],
                 position: [40, -10],
                 color: "salmon",
-                symbol: "💣"
+                symbol: "\uD83D\uDCA3"
             },
-            function(ev) {
+            function() {
                 _this.action(1, true);
             },
-            function(ev) {
+            function() {
                 _this.action(1, false);
             },
-            function(ev) {});
+            function() {});
         items["shoot"] = shootButton;
 
         var optionsButton = new Button("options", container, {
                 classes: ["pressButton", "touchable", "touchElement"],
                 position: [0, -40],
                 color: 0xacefac,
-                symbol: "🔧"
+                symbol: "\uD83D\uDD27"
             },
-            function(ev) {
+            function() {
                 $('#optionsModal').modal('toggle');
             });
         items["options"] = optionsButton;
@@ -153,7 +148,7 @@ ControllerModel.prototype = {
                 color: 0x40E57B,
                 symbol: "Hi.",
             }, function() {},
-            function(ev) {
+            function() {
                 messagePanel.scriptIndex++;
                 messagePanel.symbol = messagePanel.script[messagePanel.scriptIndex] || "";
                 if (messagePanel.triggers[messagePanel.scriptIndex]) messagePanel.triggers[messagePanel.scriptIndex]();
@@ -210,9 +205,7 @@ ControllerModel.prototype = {
         messagePanel.scriptIndex = 0;
 
         messagePanel.script[0] = "Hi! Tap here to start organizing!";
-
         messagePanel.script[1] = "Ok. Tap on me to keep the conversation going.";
-
         messagePanel.script[2] = "You'll start by placing me somewhere.";
 
         messagePanel.script[3] = "I'm purple, movable. Drag me around to move me there.";
@@ -260,7 +253,6 @@ ControllerModel.prototype = {
             shield.unlock();
         };
 
-
         messagePanel.script[10] = "Good job! You're done.";
         messagePanel.triggers[10] = function() {
             shield.lock();
@@ -294,7 +286,7 @@ ControllerModel.prototype = {
     }
 };
 
-var Button = function(name, container, options, onpress, onrelease, ondrag) {
+export function Button(name, container, options, onpress, onrelease, ondrag) {
     options = options || {};
     var _this = this;
 
@@ -344,10 +336,7 @@ var Button = function(name, container, options, onpress, onrelease, ondrag) {
         _this.host.touchDown = true;
         _this.pressingTouchId = ev.changedTouches[0].identifier;
 
-        if (!_this.isLocked) {
-
-        }
-        else {
+        if (_this.isLocked) {
             onpress.call(_this.host, ev);
         }
 
@@ -416,7 +405,7 @@ var Button = function(name, container, options, onpress, onrelease, ondrag) {
 
     this.isLocked = true;
     this.pressingTouchId = null;
-};
+}
 
 Button.prototype = {
     refresh: function() {
@@ -446,7 +435,7 @@ Button.prototype = {
     },
     getState: function() {
         var stateObj = {};
-        stateObj.position = this.position
+        stateObj.position = this.position;
         return stateObj;
     },
     setState: function(stateObj) {

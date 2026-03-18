@@ -1,15 +1,15 @@
-var Vector = function(x, y) {
+export function Vector(x, y) {
     this.x = x || 0;
     this.y = y || 0;
-};
+}
 
-Vector.prototype.set = function(x,y){
+Vector.prototype.set = function(x, y) {
     this.x = x;
     this.y = y;
     return this;
 };
 
-Vector.prototype.copyFrom = function(other){
+Vector.prototype.copyFrom = function(other) {
     this.x = other.x;
     this.y = other.y;
     return this;
@@ -49,17 +49,18 @@ Vector.prototype.length = function() {
     return Math.sqrt(this.x * this.x + this.y * this.y);
 };
 
-Vector.prototype.dot = function(other){
+Vector.prototype.dot = function(other) {
     return this.x * other.x + this.y * other.y;
-}
+};
 
 Vector.prototype.normalize = function() {
     var len = this.length();
     if (len == 0) return this;
-    
+
     this.scaleInPlace(1 / len);
     return this;
 };
+
 Vector.prototype.clamp = function(min, max) {
     if (min > max) throw new Error("Inverse ranges");
     if (this.x > max) {
@@ -76,7 +77,7 @@ Vector.prototype.clamp = function(min, max) {
     }
 };
 
-Vector.prototype.distanceTo = function(other){
+Vector.prototype.distanceTo = function(other) {
     return other.subtract(this).length();
 };
 

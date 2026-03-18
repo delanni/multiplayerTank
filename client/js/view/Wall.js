@@ -1,4 +1,6 @@
-var Wall = function(x, y, options) {
+import { Vector } from '../Vector';
+
+export function Wall(x, y, options) {
     options = options || {};
 
     this.position = new Vector(x, y);
@@ -11,7 +13,7 @@ var Wall = function(x, y, options) {
     this.life = options.life || Infinity;
     this.collisionGroup = options.collisionGroup || "wallplayer,0;wallball,0";
     this.collisionGroups = [];
-};
+}
 
 Wall.prototype.draw = function(context) {
     context.fillStyle = "#" + this.color;
@@ -22,10 +24,6 @@ Wall.prototype.animate = function(time) {
     this.life -= time;
     if (this.life < 0) this.world.remove(this);
 };
-
-// Wall.prototype.getBoundingRadius = function() {
-//     return null;
-// };
 
 Wall.prototype.intersects = function(other) {
     if (other.getBoundingRadius) {

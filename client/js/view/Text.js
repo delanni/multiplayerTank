@@ -1,4 +1,6 @@
-var Text = function(x, y, text, options) {
+import { Vector } from '../Vector';
+
+export function Text(x, y, text, options) {
     options = options || {};
 
     this.position = new Vector(x, y);
@@ -11,7 +13,7 @@ var Text = function(x, y, text, options) {
     this.speed = options.speed || new Vector();
 
     this.life = options.life || Infinity;
-};
+}
 
 Text.prototype.draw = function(context) {
     context.fillStyle = "#" + this.color;
@@ -26,13 +28,12 @@ Text.prototype.animate = function(time) {
     if (this.life < 0) this.world.remove(this);
 };
 
-Text.prototype.getBoundingRadius = function(){
-  return 0;
+Text.prototype.getBoundingRadius = function() {
+    return 0;
 };
 
-Text.prototype.intersects = function(other) {
+Text.prototype.intersects = function() {
     return false;
 };
 
-Text.prototype.handleCollisionWith = function(other) {
-};
+Text.prototype.handleCollisionWith = function() {};
