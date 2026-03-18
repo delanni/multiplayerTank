@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "build": "webpack --mode production",
+    "build:netlify": "webpack --mode production && node scripts/build-netlify.js",
     "dev": "webpack --mode development --watch"
   },
   "repository": "",
