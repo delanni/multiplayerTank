@@ -1,9 +1,9 @@
 var T = require("../util/Tracing");
 var Viewer = require("./Viewer");
 var Controller = require("./Controller");
-Array.prototype.remove = require("../util/ArrayExtensions").remove;
+var arrayRemove = require("../util/ArrayExtensions").remove;
 
-var GameRoom = function(id) {
+function GameRoom(id) {
     this.id = id;
 
     this.capacity = 10;
@@ -12,7 +12,7 @@ var GameRoom = function(id) {
     this.controllers = {};
 
     T.tab(id, "ROOM");
-};
+}
 
 GameRoom.prototype.addConnection = function(connection, options) {
     var playerPayload = {
@@ -20,7 +20,7 @@ GameRoom.prototype.addConnection = function(connection, options) {
         id: connection.id,
         name: connection.name,
         color: (Math.floor(Math.random() * 0x999999) + 0xf666666).toString(16).substr(1),
-        avatar: 'http://thecatapi.com/api/images/get?size=small&player=' + connection.id
+        avatar: 'https://placecats.com/100/100?player=' + connection.id
     };
     var type = options.type;
     if (type == "view") {
@@ -39,19 +39,19 @@ GameRoom.prototype.addConnection = function(connection, options) {
 };
 
 GameRoom.prototype.dropConnection = function(connection) {
-    var connectionDetecionPredicate = function(e) {
+    var connectionDetectionPredicate = function(e) {
         return e.id == connection.id;
     };
-    var c = this.controllersList.remove(connectionDetecionPredicate);
+    var c = arrayRemove.call(this.controllersList, connectionDetectionPredicate);
     if (c) {
         this.messageToViews("playerLeave", connection.id, {
             id: connection.id
         });
     }
-    var v = this.viewsList.remove(connectionDetecionPredicate);
+    var v = arrayRemove.call(this.viewsList, connectionDetectionPredicate);
     var room = this;
     if (v) {
-        setTimeout(function(){room.trySelfDestruct();}, 10000);
+        setTimeout(function() { room.trySelfDestruct(); }, 10000);
     }
     this.controllers[connection.id] = null;
 };

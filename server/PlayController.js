@@ -1,41 +1,38 @@
 var express = require("express");
-
 var T = require("../util/Tracing");
 
-var playController = express();
+function createPlayRouter(gameServer) {
+    var router = express.Router();
 
-playController.get("/", function(req, res, next) {
-    var gameServer = playController.locals.gameServer;
-    var gameId = req.params.id;
-    if (!gameId) {
+    router.get("/", function(req, res) {
         var room = gameServer.createRoom();
-        gameId = room.id;
-        res.redirect(gameId);
-    }
-});
+        res.redirect(room.id);
+    });
 
-playController.get("/:id", function(req, res, next) {
-    var gameServer = playController.locals.gameServer;
-    var gameId = req.params.id;
-    if (!gameId) {
-        var room = gameServer.createRoom();
-        gameId = room.id;
-        res.redirect(gameId);
-    }
-    else {
-        room = gameServer.rooms[gameId];
-        if (!room) {
-            if (gameId.match(/^\w+$/)){
-                room = gameServer.createRoom(gameId);
-            } else {
-                res.end("Please use a room name with: (Only characters, one word) ");
-            }
-            res.redirect(gameId);
+    router.get("/:id", function(req, res) {
+        var gameId = req.params.id;
+        if (!gameId) {
+            var room = gameServer.createRoom();
+            res.redirect(room.id);
         }
         else {
-            res.render("play.html");
+            var room = gameServer.rooms[gameId];
+            if (!room) {
+                if (gameId.match(/^\w+$/)) {
+                    gameServer.createRoom(gameId);
+                    res.redirect(gameId);
+                }
+                else {
+                    res.status(400).end("Please use a room name with: (Only characters, one word) ");
+                }
+            }
+            else {
+                res.render("play.html");
+            }
         }
-    }
-});
+    });
 
-module.exports = playController;
+    return router;
+}
+
+module.exports = createPlayRouter;
