@@ -1,46 +1,52 @@
 var fs = require("fs");
+var path = require("path");
+
 var T = {
     _consoleWriting: true,
-    _fileWriting: true,
+    _fileWriting: false,
     _fileLineLimit: 10000,
     _fileCounter: 0,
     _lineCounter: 0,
-    _jsonify: true,
     _path: "./logs/",
     _filePrefix: "fileLog",
     _actualFilename: "bin.log",
 
     _openFile: function() {
-        var readableDate = new Date().toJSON().split("T")[0];
-        do {
-            this._actualFilename = this._path + this._filePrefix + "-" + readableDate + "-" + this._fileCounter + ".txt";
-        } while (fs.existsSync(this._actualFilename) && ++this._fileCounter);
-        fs.writeFileSync(this._actualFilename, "");
+        try {
+            if (!fs.existsSync(this._path)) {
+                fs.mkdirSync(this._path, { recursive: true });
+            }
+            var readableDate = new Date().toJSON().split("T")[0];
+            do {
+                this._actualFilename = this._path + this._filePrefix + "-" + readableDate + "-" + this._fileCounter + ".txt";
+            } while (fs.existsSync(this._actualFilename) && ++this._fileCounter);
+            fs.writeFileSync(this._actualFilename, "");
+        }
+        catch (err) {
+            console.error("Could not open log file:", err.message);
+            this._fileWriting = false;
+        }
     },
     _closeFile: function() {
         this._actualFilename = "bin.log";
         this._fileCounter++;
         this._lineCounter = 0;
-        //this.save();
     },
-    _resolveFormat: function(format, objects) {
-        // temp.
+    _resolveFormat: function(format) {
         var text = format.split("\t").map(function(word) {
             if (TracingDictionary[word]) return word + "\t" + TracingDictionary[word];
             return word;
         }).join("\t");
         return text;
     },
-    tab: function(items) {
-        if (arguments.length > 1) {
-            items = [].slice.call(arguments);
-        }
+    tab: function() {
+        var items = [].slice.call(arguments);
         this.log([new Date().toJSON()].concat(items).join("\t"));
     },
     log: function(format) {
         var _this = this;
         setImmediate(function() {
-            var text = _this._resolveFormat(format, [].slice.call(arguments));
+            var text = _this._resolveFormat(format);
             if (_this._fileWriting) {
                 _this._logToFile(text);
             }
@@ -61,7 +67,7 @@ var T = {
             this._openFile();
         }
         this._lineCounter++;
-        fs.appendFile(this._actualFilename, text + "\n", "utf8", function(err, res) {
+        fs.appendFile(this._actualFilename, text + "\n", "utf8", function(err) {
             if (err) {
                 console.error("Logging error", err);
             }
@@ -70,26 +76,8 @@ var T = {
     error: function(message, error, trace) {
         this.log("ERROR: " + message + "\n\t" + trace);
         console.error("Error:" + message, error);
-    },
-
-    load: function() {
-        var configs = JSON.parse(fs.readFileSync("config.json").toString());
-        Object.keys(configs.tracing).forEach(function(key) {
-            this["_" + key] = configs.tracing[key];
-        }, this);
-    },
-    save: function() {
-        var configs = JSON.parse(fs.readFileSync("config.json").toString());
-        Object.keys(this).filter(function(e) {
-            return e.charAt(0) == "_" && typeof this[e] != "function";
-        }, this).forEach(function(key) {
-            configs.tracing[key.substr(1)] = this[key];
-        }, this);
-        fs.writeFileSync("config.json", JSON.stringify(configs));
     }
 };
-
-//T.load();
 
 var TracingDictionary = {
     "PONG": "Server answered roundtrip",

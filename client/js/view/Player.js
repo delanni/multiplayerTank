@@ -1,4 +1,12 @@
-var Player = function(id, info, pos, world) {
+import { Vector } from '../Vector';
+import { EventEmitter, __mixin } from '../Helpers';
+import { Explosion } from './Explosion';
+import { Pixel } from './Pixel';
+import { Ball } from './Ball';
+import { Text } from './Text';
+import { Wall } from './Wall';
+
+export function Player(id, info, pos, world) {
     this.playerId = id;
 
     this.name = info.name;
@@ -31,11 +39,11 @@ var Player = function(id, info, pos, world) {
     this.collisionGroup = "ballplayer,1;wallplayer,1";
     this.collisionGroups = [];
     this.events = {};
-};
+}
 
 __mixin(Player.prototype, EventEmitter.prototype);
 
-Player.prototype.updateInfo = function(info){
+Player.prototype.updateInfo = function(info) {
     this.name = info.name || this.name;
     this.avatar = info.avatar || this.avatar;
     this.color = info.color || this.color;
@@ -61,7 +69,7 @@ Player.prototype.aimTowards = function(aimDir) {
 Player.prototype.handleKeystateChange = function(keyChange) {
     if (keyChange.value) {
         if (this.keyState[0] || this.keyState[1] || this.keyState[2]) {
-
+            // already pressing something
         }
         else {
             this.keyState[keyChange.key] = 1;
@@ -73,7 +81,7 @@ Player.prototype.handleKeystateChange = function(keyChange) {
 };
 
 Player.prototype.animate = function(delta) {
-    var factor = delta * 60/1000;
+    var factor = delta * 60 / 1000;
     if (this.keyState[0]) {
         this.rotation.normalize();
         var direction = this.aimDirection.subtract(this.rotation);
@@ -205,7 +213,7 @@ Player.prototype.intersects = function(other) {
 Player.prototype.collideBy = function(other) {
     if (other instanceof Ball) {
         if (this.keyState[2]) {
-
+            // shield active
         }
         else {
             this.life -= (1 + other.charge);
@@ -230,11 +238,9 @@ Player.prototype.collideBy = function(other) {
     }
 };
 
-Player.prototype.collideTo = function(other) {
+Player.prototype.collideTo = function() {};
 
-};
-
-Player.prototype.explode = function(direction) {
+Player.prototype.explode = function() {
     var _thisPlayer = this;
     var explosion = new Explosion({
         particlesCount: Math.ceil(this.getBoundingRadius() * Math.random() * 4),

@@ -4,7 +4,7 @@ A local-multiplayer tank arena game played through the browser. One shared scree
 
 ## How to play
 
-1. Start the server with `node server.js`
+1. Start the server (see [Install and run](#install-and-run) below)
 2. Open `http://localhost:3000` in a browser on a shared screen (TV, laptop, projector)
 3. Create a room — the room ID will appear in the address bar as `/play/{ID}`
 4. On each player's phone or tablet, open the same address and enter the room ID to join
@@ -44,7 +44,7 @@ Phone (Controller) ──socket.io──▶ Node.js Server ──socket.io──
 
 ### Networking
 
-All communication goes through **Socket.IO** WebSockets. Key message types:
+All communication goes through **Socket.IO 4** WebSockets with automatic reconnection, connection error handling, and exponential backoff. Key message types:
 
 | Direction | Event | Purpose |
 |---|---|---|
@@ -67,12 +67,13 @@ All communication goes through **Socket.IO** WebSockets. Key message types:
 
 ```
 server.js                       Entry point — HTTP server + Socket.IO setup
-config.js                       Runtime configuration
+webpack.config.js               Webpack bundling configuration
+netlify.toml                    Netlify deployment configuration
 
 server/
   Connection.js                 Wraps a Socket.IO socket, assigns UUID and random name
-  PlayController.js             Express routes for /play/:id
-  ControllerController.js       Express routes for /control/:id
+  PlayController.js             Express Router factory for /play/:id
+  ControllerController.js       Express Router factory for /control/:id
 
 game/
   GameServer.js                 Manages all connections and rooms
@@ -82,22 +83,31 @@ game/
 
 client/
   index.html                    Lobby / landing page
-  js/view/
-    GameWorld.js                Game loop, entity management, collision system
-    Player.js                   Tank entity — movement, health, scoring
-    Ball.js                     Projectile entity — charge, mass, lifetime
-    Wall.js                     Static arena boundaries and obstacles
-    Explosion.js                Particle effects on impact
-  js/controller/
-    ControllerModel.js          Controller state — name, color, button layout
-    ControllerCanvas.js         Touch joystick rendering
   js/
-    Vector.js                   2D vector math
+    socket.js                   Shared Socket.IO client with reconnection handling
+    lobby-app.js                Lobby Angular app entry point
+    viewer-app.js               Viewer Angular app entry point
+    controller-app.js           Controller Angular app entry point
     Helpers.js                  EventEmitter, mixins, utilities
+    Vector.js                   2D vector math
+    view/
+      GameWorld.js              Game loop, entity management, collision system
+      Player.js                 Tank entity — movement, health, scoring
+      Ball.js                   Projectile entity — charge, mass, lifetime
+      Wall.js                   Static arena boundaries and obstacles
+      Explosion.js              Particle effects on impact
+      Pixel.js                  Particle entity
+      Text.js                   Floating text entity
+    controller/
+      ControllerModel.js        Controller state — name, color, button layout
+  dist/                         Webpack output (generated, gitignored)
 
 views/
-  play.html                     Viewer page template (EJS)
-  control.html                  Controller page template (EJS)
+  play.html                     Viewer page template
+  control.html                  Controller page template
+
+scripts/
+  build-netlify.js              Assembles static output for Netlify deployment
 
 util/
   Generators.js                 UUID and random name generation
@@ -108,17 +118,39 @@ util/
 
 ## Tech stack
 
-- **Node.js** with **Express 3.x** and **EJS** templates
-- **Socket.IO 0.9** for real-time WebSocket communication
-- **AngularJS 1.x** on the client
+- **Node.js 18+** with **Express 4** and **EJS** templates
+- **Socket.IO 4** for real-time WebSocket communication
+- **Webpack 5** for client-side module bundling
+- **AngularJS 1.5** on the client (loaded from CDN)
 - **Canvas 2D** for game rendering
-- No database — all state is in-memory
 
 ## Install and run
 
 ```bash
 npm install
-node server.js
+npm run build
+npm start
 ```
 
 The server listens on port 3000 by default (configurable via `PORT` and `IP` environment variables).
+
+### Development
+
+For development with automatic client rebuilds:
+
+```bash
+npm run dev          # watches client files and rebuilds on change
+npm start            # in another terminal, starts the server
+```
+
+### Deploying to Netlify
+
+The client-side assets can be deployed to Netlify for static hosting. The WebSocket server must be deployed separately (e.g. on Railway, Render, or Fly.io).
+
+1. Connect your repository to Netlify — the build command and publish directory are configured in `netlify.toml`
+2. Deploy the Node.js server elsewhere and note its URL
+3. Set the `__SOCKET_SERVER_URL` window variable or configure the socket URL to point to your server
+
+```bash
+npm run build:netlify    # builds client and assembles netlify-dist/
+```

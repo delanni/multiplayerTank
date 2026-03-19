@@ -1,21 +1,24 @@
 var express = require("express");
 
-var controllerController = express();
+function createControllerRouter(gameServer) {
+    var router = express.Router();
 
-controllerController.get("/", function(req, res, next) {
-    res.redirect("../");
-});
+    router.get("/", function(req, res) {
+        res.redirect("../");
+    });
 
-controllerController.get("/:id", function(req, res, next) {
-    var gameServer = controllerController.locals.gameServer;
-    var gameId = req.params.id;
-    var room = gameServer.rooms[gameId];
-    if (!room) {
-        res.status(404).end("No such room");
-    }
-    else {
-        res.render("control.html");
-    }
-});
+    router.get("/:id", function(req, res) {
+        var gameId = req.params.id;
+        var room = gameServer.rooms[gameId];
+        if (!room) {
+            res.status(404).end("No such room");
+        }
+        else {
+            res.render("control.html");
+        }
+    });
 
-module.exports = controllerController;
+    return router;
+}
+
+module.exports = createControllerRouter;

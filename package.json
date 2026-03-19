@@ -1,14 +1,28 @@
 {
   "name": "TanksOnCanvas",
-  "version": "0.8.8",
+  "version": "0.9.0",
   "description": "A small multi-player tank game.",
   "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "webpack --mode production",
+    "build:netlify": "webpack --mode production && node scripts/build-netlify.js",
+    "dev": "webpack --mode development --watch"
+  },
   "repository": "",
   "author": "Alex Szabo <delanni.alex@gmail.com>",
   "dependencies": {
-    "express": "~3.2.4",
-    "socket.io": "~0.9.14",
-    "ejs": "~2.3.2"
+    "cors": "^2.8.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.0",
+    "socket.io": "^4.8.0",
+    "socket.io-client": "^4.8.0"
   },
-  "engine": "node 0.10.35"
+  "devDependencies": {
+    "webpack": "^5.97.0",
+    "webpack-cli": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
 }

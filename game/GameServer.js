@@ -1,30 +1,30 @@
 var T = require("../util/Tracing");
 var Generator = require("../util/Generators");
 var GameRoom = require("./GameRoom");
-Array.prototype.remove = require("../util/ArrayExtensions").remove;
+var arrayRemove = require("../util/ArrayExtensions").remove;
 
-var GameServer = function() {
+function GameServer() {
     this.connections = {};
     this.connectionList = [];
 
     this.rooms = {};
     this.roomList = [];
-};
+}
 
-GameServer.prototype.createRoom = function(id){
+GameServer.prototype.createRoom = function(id) {
     var id = id || Generator.GenerateSoup(5);
     var room = new GameRoom(id);
-    
+
     this.rooms[id] = room;
     this.roomList.push(room);
-    
+
     room.server = this;
     return room;
 };
 
-GameServer.prototype.deleteRoom = function(room){
+GameServer.prototype.deleteRoom = function(room) {
     var id = room.id;
-    this.roomList.remove(room);
+    arrayRemove.call(this.roomList, room);
     this.rooms[id] = null;
 };
 
@@ -37,12 +37,9 @@ GameServer.prototype.addConnection = function(connection) {
 
 GameServer.prototype.dropConnection = function(connection) {
     this.connections[connection.id] = null;
-    this.connectionList.remove(connection);
+    arrayRemove.call(this.connectionList, connection);
 };
 
-/**
- * Will be executed in the context of the server 
- **/
 GameServer.prototype.handlers = {
     pong: function(connection, payload) {
         var receivedAt = Date.now();
@@ -57,14 +54,15 @@ GameServer.prototype.handlers = {
     joinRoom: function(connection, payload) {
         var roomId = payload.roomId;
         var room = this.rooms[roomId];
-        if (room){
+        if (room) {
             T.tab(connection.id, connection.name, roomId, "ROOMJOIN");
             room.addConnection(connection, payload);
-            connection.on("disconnect", function(){
+            connection.on("disconnect", function() {
                 room.dropConnection(connection);
             });
-        } else {
-            connection.emit("error",{
+        }
+        else {
+            connection.emit("error", {
                 message: "The requested room does not exist"
             });
             connection.emit("roomClosed");

@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build:netlify"
+  publish = "netlify-dist"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/play/*"
+  to = "/play.html"
+  status = 200
+
+[[redirects]]
+  from = "/control/*"
+  to = "/control.html"
+  status = 200

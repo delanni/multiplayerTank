@@ -34,3 +34,9 @@ node_modules
 
 # cloud9
 .c9
+
+# Webpack build output
+client/dist
+
+# Netlify build output
+netlify-dist
